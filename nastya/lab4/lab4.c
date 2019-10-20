@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/timeb.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 /* clear standart text mode window */
 
@@ -62,32 +64,33 @@ void gotoxy(int tx, int ty, char c) {
 }
 
 int main(int argc, char* argv[]) {
-    int x = 1;
     int status;
     int j = 0;
     int PROCNUM = atoi(argv[1]);
     int* pid = sbrk((PROCNUM + 1) * sizeof(int));
     char* lead = sbrk((PROCNUM + 1) * sizeof(char));
-    int dist = strlen(argv[2]);
+    int x = strlen(argv[2]) + 1;
     int p;
     const char* bell = "\007";
     struct timeb tp[1];
     int jump;
     clrscr();
-    for (int i = 0; i < dist; ++i) {
+    int i;
+    for (i = 0; i < PROCNUM; ++i) {
         printf("%c%s\n", 'A' + i, argv[2]);
     }
     while (j < PROCNUM) {
         if ((pid[j] = fork()) == 0) {
             usleep((PROCNUM - j));
             while (x > 0) {
-                gotoxy(x, j + 1, ' ');
+                gotoxy(x + 1, j + 1, ' ');
+                gotoxy(x, j + 1, 'A' + j);
                 ftime(tp);
                 if ((tp[0].millitm % (j + 'A')) != j) {
                     continue;
                 }
                 --x;
-                for(int i=0; i<1000000; i++);
+                for(i=0; i<1000000; i++);
             }
             exit('A' + j);
         }
@@ -96,14 +99,14 @@ int main(int argc, char* argv[]) {
 
     j = 0;
     while ((p = wait(&status)) != (-1)) {
-        for(int i = 0; i < PROCNUM; i++) {
+        for(i = 0; i < PROCNUM; i++) {
             if (pid[i] == p) {
                 lead[j++] = (char) ((status >> 8) & '\377');
             }
         }
-        printf(bell);
+        printf("%s", bell);
     }
-    lead[j] = '0';
+    lead[j] = '\0';
     sleep(1);
     gotoxy(1, PROCNUM + 3, '\n');
     printf("%s\n", lead);

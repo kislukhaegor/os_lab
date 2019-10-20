@@ -59,7 +59,7 @@ void gotoxy(int tx, int ty, char c) {
     write(1, esc, i);
 }
 
-int main(int argc, char* argv[]) lab4.clab4.c
+int main(int argc, char* argv[]) {
     int y = 1;
     int status;
     int i;
